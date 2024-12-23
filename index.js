@@ -7,28 +7,24 @@ connectDB();
 const PORT = process.env.PORT || 5000;
 
 const express = require("express");
-const cors = require("cors"); // Import CORS middleware
-const upload = require('./config/multerConfig'); // Import Multer config
+const cors = require("cors");
+const upload = require('./config/multerConfig');
 const app = express();
+
+// Import Routes
+const userRoutes = require("./routes/UserRoutes");
+const authRoutes = require("./routes/AuthRoutes");
+
 
 // Middleware
 app.use(cors()); // Enable CORS for all origins
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use('/uploads', express.static('uploads')); // Endpoint for Image Location
+app.use('/uploads', express.static('uploads'));
 
-
-// Upload Route
-app.post('/upload', upload.single('file'), (req, res) => {
-    if (req.file) {
-        res.status(200).json({
-            message: "File uploaded successfully",
-            filePath: `/uploads/${req.file.filename}`,
-        });
-    } else {
-        res.status(400).json({ message: "File upload failed" });
-    }
-});
+// Define Routes
+app.use("/api/users", userRoutes);
+app.use("/api/auth", authRoutes);
 
 // Default Route
 app.get("/", (req, res) => {

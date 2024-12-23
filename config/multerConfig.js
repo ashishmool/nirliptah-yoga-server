@@ -1,16 +1,67 @@
-// config/multerConfig.js
-const multer = require('multer');
+const multer = require("multer");
+const path = require("path");
+const fs = require("fs");
+
+// Define the root and upload directories
+const rootDir = path.resolve(__dirname, "../");
+const uploadDirectory = path.join(rootDir, "uploads");
+
+// Helper function to create directories if they don't exist
+const createDirectoryIfNotExists = (dirPath) => {
+    if (!fs.existsSync(dirPath)) {
+        fs.mkdirSync(dirPath, { recursive: true });
+    }
+};
+
+// Ensure the base upload directory exists
+createDirectoryIfNotExists(uploadDirectory);
 
 // Multer storage configuration
 const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, './uploads/');
+    destination: (req, file, cb) => {
+        let folder = "uploads"; // Default folder
+
+        // Determine folder based on the field name
+        switch (file.fieldname) {
+            case "profile_picture":
+                folder = "profile_pictures";
+                break;
+            default:
+                folder = "misc";
+        }
+
+        const uploadPath = path.join(uploadDirectory, folder);
+        createDirectoryIfNotExists(uploadPath);
+        cb(null, uploadPath);
     },
-    filename: function (req, file, cb) {
-        cb(null, `${Date.now()}-${file.originalname}`);
+    filename: (req, file, cb) => {
+        const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1E9)}`;
+        const ext = path.extname(file.originalname); // Extract file extension
+        cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
     },
 });
 
-const upload = multer({ storage });
+// File filter to validate file types
+const fileFilter = (req, file, cb) => {
+    const allowedExtensions = /jpeg|jpg|png/;
+    const extname = allowedExtensions.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedExtensions.test(file.mimetype);
+
+    if (extname && mimetype) {
+        cb(null, true); // File is valid
+    } else {
+        cb(new Error("Unsupported file type! Only JPEG, JPG, and PNG are allowed."));
+    }
+};
+
+// Multer upload configuration
+const upload = multer({
+    storage,
+    fileFilter,
+    // Uncomment and adjust the following line if file size limits are needed
+    // limits: { fileSize: 10 * 1024 * 1024 }, // Limit to 10MB
+}).fields([
+    { name: "profile_picture", maxCount: 1 }, // Profile Picture
+]);
 
 module.exports = upload;
