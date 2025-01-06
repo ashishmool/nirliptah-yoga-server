@@ -1,13 +1,13 @@
-const mongoose = require('mongoose');
+const mongoose=require("mongoose")
 
-const connectDB = async () => {
-    try {
-        await mongoose.connect(process.env.MONGO_URI);
-        console.log('MongoDB connected successfully');
-    } catch (error) {
-        console.error('Database connection error:', error.message);
-        process.exit(1);
+const connectDB=async()=>{
+    try{
+        await mongoose.connect("mongodb://localhost:27017/nirlipta_yoga_db");
+        console.log("Database connection established successfully!");
     }
-};
+    catch(e){
+        console.log(e);
+    }
+}
 
 module.exports = connectDB;

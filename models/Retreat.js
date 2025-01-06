@@ -2,10 +2,6 @@ const mongoose = require("mongoose");
 
 const retreatSchema = new mongoose.Schema(
     {
-        retreat_id: {
-            type: mongoose.Schema.Types.ObjectId, // Primary Key
-            auto: true,
-        },
         title: {
             type: String,
             required: true,
@@ -63,7 +59,7 @@ const retreatSchema = new mongoose.Schema(
             ref: "Instructor",
             required: false, // Nullable for testing purpose
         },
-        retreat_photo: {
+        photo: {
             type: String,
             required: false,
         },

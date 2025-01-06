@@ -16,73 +16,60 @@ const createDirectoryIfNotExists = (dirPath) => {
 // Ensure the base upload directory exists
 createDirectoryIfNotExists(uploadDirectory);
 
+// Folder mapping for field names
+const folderMapping = {
+    "retreat_photo": "retreat_photos",
+    "guest_photo": "guest_photos",
+    "workshop_photo": "workshop_photos",
+    "accommodation_photo": "accommodation_photos",
+    "user_photo": "user_photos",
+    "file": "pdf_files",
+};
+
 // Multer storage configuration
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        let folder = "uploads"; // Default folder
-
-        // Determine folder based on the field name
-        switch (file.fieldname) {
-            case "retreat_photo":
-                folder = "retreat_photos";
-                break;
-            case "guests[0][photo]":
-                folder = "guest_photos";
-                break;
-            case "guests[1][photo]":
-                folder = "guest_photos";
-                break;
-            case "workshop_photo":
-                folder = "workshop_photos";
-                break;
-            case "accommodation_photo":
-                folder = "accommodation_photos";
-                break;
-            case "profile_picture":
-                folder = "profile_pictures";
-                break;
-            default:
-                folder = "misc";
-        }
-
+        const folder = folderMapping[file.fieldname] || "misc";
         const uploadPath = path.join(uploadDirectory, folder);
         createDirectoryIfNotExists(uploadPath);
         cb(null, uploadPath);
     },
     filename: (req, file, cb) => {
         const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1E9)}`;
-        const ext = path.extname(file.originalname); // Extract file extension
+        const ext = path.extname(file.originalname).toLowerCase();
         cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
     },
 });
 
 // File filter to validate file types
 const fileFilter = (req, file, cb) => {
-    const allowedExtensions = /jpeg|jpg|png/;
-    const extname = allowedExtensions.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedExtensions.test(file.mimetype);
+    const allowedMimeTypes = {
+        "retreat_photo": /image\/(jpeg|jpg|png)/,
+        "guest_photo": /image\/(jpeg|jpg|png)/,
+        "workshop_photo": /image\/(jpeg|jpg|png)/,
+        "accommodation_photo": /image\/(jpeg|jpg|png)/,
+        "user_photo": /image\/(jpeg|jpg|png)/,
+        "file": /application\/pdf/,
+        "files": /(application\/pdf|image\/(jpeg|jpg|png))/,
+    };
 
-    if (extname && mimetype) {
-        cb(null, true); // File is valid
+    const allowedMimeType = allowedMimeTypes[file.fieldname];
+    if (allowedMimeType && allowedMimeType.test(file.mimetype)) {
+        cb(null, true); // Valid file
     } else {
-        cb(new Error("Unsupported file type! Only JPEG, JPG, and PNG are allowed."));
+        cb(new Error(`Invalid file type for ${file.fieldname}`));
     }
 };
 
-// Multer upload configuration
-const upload = multer({
-    storage,
-    fileFilter,
-    // Uncomment and adjust the following line if file size limits are needed
-    // limits: { fileSize: 10 * 1024 * 1024 }, // Limit to 10MB
-}).fields([
+// Multer configurations
+const upload = multer({ storage, fileFilter }).fields([
     { name: "retreat_photo", maxCount: 1 },
-    { name: "guests[0][photo]", maxCount: 1 }, // First guest photo
-    { name: "guests[1][photo]", maxCount: 1 }, // Second guest photo (if any)
-    { name: "workshop_photo", maxCount: 1 }, // Workshop photo
-    { name: "accommodation_photo", maxCount: 1 }, // Accommodation photo
-    { name: "profile_picture", maxCount: 1 }, // Profile photo
+    { name: "workshop_photo", maxCount: 1 },
+    { name: "accommodation_photo", maxCount: 1 },
+    { name: "user_photo", maxCount: 1 },
+    { name: "file", maxCount: 1 },
+    { name: "guests[photo]", maxCount: 10 },
 ]);
 
 
-module.exports = upload;
+module.exports = {upload};

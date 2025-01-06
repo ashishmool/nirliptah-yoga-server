@@ -1,23 +1,28 @@
-const { getUsers, getUserById, createUser, updateUser, patchUser, deleteUser } = require("../controller/UserController");
 const express = require("express");
-const userValidation = require("../validation/userValidation");
-const upload = require("../config/multerConfig");
 const router = express.Router();
+const { upload } = require("../config/multerConfig"); // Import multer middleware
+const {
+    getUsers,
+    getUserById,
+    createUser,
+    updateUser,
+    patchUser,
+    deleteUser,
+} = require("../controller/UserController");
 
 // Get all users
 router.get("/", getUsers);
 
-// Create a new user
-router.post("/save", upload,  createUser);
-// router.post("/save", userValidation, createUser);
-
 // Get user by ID
 router.get("/getById/:id", getUserById);
 
-// Update user by ID
+// Create a new user with an optional file upload (e.g., profile picture)
+router.post("/save", upload, createUser);
+
+// Update user by ID with an optional file upload
 router.put("/update/:id", upload, updateUser);
 
-// Partially update user by ID
+// Partially update user by ID with an optional file upload
 router.patch("/patch/:id", upload, patchUser);
 
 // Delete user by ID
